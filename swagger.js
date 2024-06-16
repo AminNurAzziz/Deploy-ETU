@@ -14,7 +14,7 @@ const swaggerOptions = {
         },
         servers: [
             {
-                url: 'https://202.10.36.225:3000/',
+                url: 'http://202.10.36.225:3000/',
                 description: 'Development server',
             },
         ],
@@ -24,7 +24,7 @@ const swaggerOptions = {
         components: {
             securitySchemes: {
                 BearerAuth: {
-                    type: 'https',
+                    type: 'http',
                     scheme: 'bearer',
                     bearerFormat: 'JWT',
                 },

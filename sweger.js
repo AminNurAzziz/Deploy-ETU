@@ -14,7 +14,7 @@ const options = {
         },
         servers: [
             {
-                url: 'https://202.10.36.225:3000/',
+                url: 'http://202.10.36.225:3000/',
                 description: 'Development server',
             },
         ],
