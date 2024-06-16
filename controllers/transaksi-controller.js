@@ -76,7 +76,7 @@ class TransaksiController {
     // }
 
 
-    
+
     // async createTransaksi(req, res) {
     //     const user = req.user.id;
     //     const userCart = await cart.findOne({ userID: user }).populate('products.productID');
@@ -87,8 +87,8 @@ class TransaksiController {
     //         });
     //     }
 
-       
-    
+
+
 
     //     const newTransaksi = new Transaksi({
     //         kode_transaksi: 'TRX-' + Date.now() + Math.floor(Math.random() * 1000),
@@ -116,13 +116,13 @@ class TransaksiController {
     // async createTransaksi(req, res) {
     //     const user = req.user.id;
     //     const userCart = await cart.findOne({ userID: user }).populate('products.productID');
-    
+
     //     if (!userCart || userCart.products.length === 0) {
     //         return res.status(400).json({
     //             message: 'Keranjang kosong atau tidak ditemukan'
     //         });
     //     }
-    
+
     //     const newTransaksi = new Transaksi({
     //         kode_transaksi: 'TRX-' + Date.now() + Math.floor(Math.random() * 1000),
     //         user: user,
@@ -137,16 +137,16 @@ class TransaksiController {
     //         } : undefined,
     //         shippingCost: userCart.shippingCost || 0
     //     });
-    
+
     //     await newTransaksi.save();
-    
+
     //     // Populate Products field in the newly created Transaksi
     //     const populatedTransaksi = await Transaksi.findById(newTransaksi._id).populate('Products.ProductID');
-    
+
     //     await TransaksiController.createMidtransTransaction(res, populatedTransaksi);
     // }
 
-    
+
     async createTransaksi(req, res) {
         //Mengambil ID pengguna dari req.user.id.
         const user = req.user.id;
@@ -178,13 +178,13 @@ class TransaksiController {
 
         //Menyimpan transaksi baru ke database.
         await newTransaksi.save();
-    
+
         //Memuat kembali transaksi yang baru dibuat dengan detail produk.
         const populatedTransaksi = await Transaksi.findById(newTransaksi._id).populate('Products.ProductID');
         //Membuat transaksi Midtrans dengan memanggil createMidtransTransaction.
-    
+
         await TransaksiController.createMidtransTransaction(res, populatedTransaksi);
-        
+
         // Kirim notifikasi ke admin setelah transaksi berhasil dibuat
         const message = {
             notification: {
@@ -203,7 +203,7 @@ class TransaksiController {
             });
     }
 
-    
+
 
     // static async createMidtransTransaction(res, transaksiData) {
     //     try {
@@ -266,7 +266,7 @@ class TransaksiController {
             const midtransBaseUrl = 'https://app.sandbox.midtrans.com/snap/v1/transactions';
             const midtransServerKey = 'SB-Mid-server-eDKCIhRGlkITnvMDtUpkinKE';
             //snap: Objek klien Midtrans Snap yang diinisialisasi dengan kunci server dan pengaturan mode pengujian (bukan produksi)
-    
+
             let snap = new midtransClient.Snap({
                 isProduction: false,
                 serverKey: midtransServerKey
@@ -277,14 +277,14 @@ class TransaksiController {
             //price: Harga produk.
             //quantity: Kuantitas produk.
             //name: Nama produk.
-            
+
             const items = transaksiData.Products.map(product => ({
                 id: product.ProductID._id,
                 price: product.ProductID.price,
                 quantity: product.quantity,
                 name: product.ProductID.nameProduct
             }));
-    
+
             // Hanya tambahkan detail biaya pengiriman jika ada
             //shippingCost: Jika biaya pengiriman ada, tambahkan sebagai item ke daftar items.
             if (transaksiData.shippingCost) {
@@ -299,7 +299,7 @@ class TransaksiController {
             const total = items.reduce((total, item) => total + (item.price * item.quantity), 0);
 
             //transactionDetails: Objek yang berisi ID pesanan (order_id) dan jumlah total (gross_amount).
-    
+
             const transactionDetails = {
                 order_id: transaksiData.kode_transaksi.toString(),
                 gross_amount: total
@@ -307,7 +307,7 @@ class TransaksiController {
 
             //Membuat Body Permintaan
             //requestBody: Objek yang dikirim ke Midtrans berisi detail transaksi dan detail item.
-    
+
             const requestBody = {
                 transaction_details: transactionDetails,
                 item_details: items,
@@ -316,7 +316,7 @@ class TransaksiController {
             //snap.createTransaction(requestBody): Membuat transaksi menggunakan Midtrans dengan mengirimkan requestBody. 
             //then: Jika transaksi berhasil dibuat, kirimkan respons dengan status 201 (Created) beserta detail transaksi.
             //catch: Jika terjadi kesalahan, lempar kesalahan tersebut untuk ditangani oleh blok catch di luar.
-    
+
             snap.createTransaction(requestBody)
                 .then((transaction) => {
                     res.status(201).json({
@@ -329,16 +329,16 @@ class TransaksiController {
                 .catch((error) => {
                     throw error;
                 });
-                //catch: Menangkap dan melempar kesalahan yang terjadi selama proses pembuatan transaksi.
+            //catch: Menangkap dan melempar kesalahan yang terjadi selama proses pembuatan transaksi.
         } catch (error) {
             throw error;
         }
     }
-    
 
 
-   
-   
+
+
+
 
     // static async createMidtransTransaction(res, transaksiData) {
     //     try {
@@ -393,8 +393,8 @@ class TransaksiController {
     //     }
     // }
 
-    
-    
+
+
 
     async updateStatus(req, res) {
         const request = req.body;
@@ -413,7 +413,7 @@ class TransaksiController {
                 transaksi.Products.forEach(product => {
                     product.status = 'Dibatalkan';
                 });
-            
+
             };
 
             await transaksi.save();
@@ -477,7 +477,7 @@ class TransaksiController {
     }
 
 
-  
+
 
     async getTransaksiUser(req, res) {
         const user = req.user.id;
@@ -492,25 +492,25 @@ class TransaksiController {
         try {
             console.log('Request Body:', req.body);
             console.log('Request File:', req.file);
-    
+
             const { productID, status, kode_transaksi } = req.body;
             const image = req.file ? req.file.filename : null;
-    
+
             console.log(`Kode Transaksi: ${kode_transaksi}`);
             console.log(`Product ID: ${productID}`);
             console.log(`Image: ${image}`);
-    
+
             const transaksi = await Transaksi.findOne({
                 kode_transaksi: kode_transaksi,
                 'Products.ProductID': productID
             });
-    
+
             if (!transaksi) {
                 return res.status(400).json({
                     message: 'Transaksi tidak ditemukan'
                 });
             }
-    
+
             let productUpdated = false;
             transaksi.Products.forEach(product => {
                 if (product.ProductID.toString() === productID) {
@@ -521,15 +521,15 @@ class TransaksiController {
                     productUpdated = true;
                 }
             });
-    
+
             if (!productUpdated) {
                 return res.status(400).json({
                     message: 'Produk tidak ditemukan dalam transaksi'
                 });
             }
-    
+
             await transaksi.save();
-    
+
             res.status(200).json({
                 message: 'Berhasil update status transaksi',
                 data: transaksi
@@ -539,15 +539,15 @@ class TransaksiController {
             res.status(500).json({ error: 'Gagal memproses permintaan' });
         }
     }
-    
-    
+
+
 
     async getTransaksiAdmin(req, res) {
         const adminUserID = req.user.id;
-    
+
         try {
             const transaksi = await Transaksi.find({}).populate('Products.ProductID').populate('user');
-    
+
             const adminTransaksi = transaksi.filter(trx => {
                 let isSeller = false;
                 trx.Products.forEach(product => {
@@ -557,7 +557,7 @@ class TransaksiController {
                 });
                 return isSeller;
             });
-    
+
             const responseFilter = adminTransaksi.map(trx => {
                 const products = trx.Products.filter(product => product.ProductID.sellerID.toString() === adminUserID);
                 return {
@@ -572,7 +572,7 @@ class TransaksiController {
                 };
             });
 
-             // Kirim notifikasi FCM setelah transaksi diambil
+            // Kirim notifikasi FCM setelah transaksi diambil
             const message = {
                 notification: {
                     title: 'Transaksi Baru',
@@ -580,7 +580,7 @@ class TransaksiController {
                 },
                 topic: 'admin'
             };
-    
+
             admin.messaging().send(message)
                 .then(response => {
                     console.log('Successfully sent message:', response);
@@ -588,9 +588,9 @@ class TransaksiController {
                 .catch(error => {
                     console.error('Error sending message:', error);
                 });
-            
-            
-    
+
+
+
             res.status(200).json({
                 message: 'Berhasil menampilkan data transaksi admin',
                 data: responseFilter
@@ -603,10 +603,10 @@ class TransaksiController {
 
     // async getTransaksiAdmin(req, res) {
     //     const adminUserID = req.user.id;
-    
+
     //     try {
     //         const transaksi = await Transaksi.find({}).populate('Products.ProductID').populate('user');
-    
+
     //         const adminTransaksi = transaksi.filter(trx => {
     //             let isSeller = false;
     //             trx.Products.forEach(product => {
@@ -625,7 +625,7 @@ class TransaksiController {
     //             })),
     //             status: trx.status
     //         }));
-    
+
     //         // Kirim notifikasi FCM setelah transaksi diambil
     //         const message = {
     //             notification: {
@@ -634,7 +634,7 @@ class TransaksiController {
     //             },
     //             topic: 'admin'
     //         };
-    
+
     //         admin.messaging().send(message)
     //             .then(response => {
     //                 console.log('Successfully sent message:', response);
@@ -642,7 +642,7 @@ class TransaksiController {
     //             .catch(error => {
     //                 console.error('Error sending message:', error);
     //             });
-    
+
     //         res.status(200).json({
     //             message: 'Berhasil menampilkan data transaksi Admin',
     //             data: adminTransaksi
@@ -652,10 +652,10 @@ class TransaksiController {
     //         res.status(500).json({ error: 'Gagal memproses permintaan' });
     //     }
     // }
-    
-    
 
-   
+
+
+
 
 
     async getGambar(req, res) {
@@ -694,7 +694,7 @@ class TransaksiController {
     }
 
 
-   
+
 
     async getPendapatanMasingMasingToko(req, res) {
         try {
@@ -747,8 +747,8 @@ class TransaksiController {
                     }
                 }
             ]);
-    
-    
+
+
             // Mengirimkan hasil grouping sebagai respons
             res.status(200).json({
                 message: 'Berhasil menghitung pendapatan masing-masing toko',

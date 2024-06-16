@@ -25,7 +25,7 @@ class cartController {
         try {
             const userID = req.user.id;
             const userCart = await cart.findOne({ userID: userID }).populate('products.productID');
-            
+
             // Ubah data ke dalam format list
             const responseData = {
                 destination: userCart.destination,
@@ -35,7 +35,7 @@ class cartController {
                 shippingCost: userCart.shippingCost,
                 __v: userCart.__v
             };
-    
+
             res.status(200).json({
                 message: 'Get cart',
                 data: [responseData] // Bungkus data dalam list
@@ -47,7 +47,7 @@ class cartController {
             });
         }
     }
-    
+
 
     // static async addToCart(req, res) {
     //     const userID = req.user.id;
@@ -98,30 +98,30 @@ class cartController {
     // }
 
 
-    
+
 
     static async addToCart(req, res) {
         const userID = req.user.id;
         const { productID, quantity, latitude, longitude } = req.body;
-    
+
         // Membuat array kosong untuk menyimpan produk baru
         const newProducts = [];
-    
+
         // Iterasi melalui setiap pasangan productID dan quantity
         for (let i = 0; i < productID.length; i++) {
             // Menambahkan setiap pasangan productID dan quantity ke array newProducts
             newProducts.push({ productID: productID[i], quantity: quantity[i] });
         }
-    
+
         try {
             // Mencari keranjang pengguna
             const userCart = await cart.findOne({ userID: userID });
-    
+
             if (userCart) {
                 // Jika keranjang pengguna sudah ada
                 for (let i = 0; i < newProducts.length; i++) {
                     const productIndex = userCart.products.findIndex(product => product.productID == newProducts[i].productID);
-    
+
                     if (productIndex >= 0) {
                         // Jika produk sudah ada di keranjang, tambahkan jumlahnya
                         userCart.products[productIndex].quantity += parseInt(newProducts[i].quantity);
@@ -130,7 +130,7 @@ class cartController {
                         userCart.products.push(newProducts[i]);
                     }
                 }
-                
+
                 // Update lokasi dan biaya pengiriman jika lokasi disediakan
                 if (latitude && longitude) {
                     userCart.destination.latitude = latitude;
@@ -148,7 +148,7 @@ class cartController {
                 });
                 await newCart.save();
             }
-    
+
             res.status(200).json({
                 message: 'Add to cart',
             });
@@ -159,12 +159,12 @@ class cartController {
             });
         }
     }
-    
 
 
 
-   
-    
+
+
+
     static async decreaseCartItem(req, res) {
         const userID = req.user.id;
         const { productID } = req.body;
@@ -252,14 +252,14 @@ class cartController {
         try {
             const userID = req.user.id;
             const userCart = await cart.findOne({ userID: userID });
-    
+
             if (userCart) {
                 userCart.products = []; // Mengosongkan daftar produk dalam keranjang
                 userCart.destination = undefined; // Menghapus lokasi
                 userCart.shippingCost = 0; // Menghapus biaya pengiriman
                 await userCart.save();
             }
-    
+
             res.status(200).json({
                 message: 'Cart cleared',
             });
@@ -271,7 +271,7 @@ class cartController {
             });
         }
     }
-    
+
     static async calculateShippingCost(cart) {
         const FREE_SHIPPING_LATITUDE = -7.9469;
         const FREE_SHIPPING_LONGITUDE = 112.6161;
@@ -304,9 +304,9 @@ class cartController {
                 response.data.rows[0].elements[0].distance &&
                 response.data.origin_addresses && response.data.origin_addresses.length > 0 &&
                 response.data.destination_addresses && response.data.destination_addresses.length > 0) {
-                
+
                 const distance = response.data.rows[0].elements[0].distance.value; // Distance in meters, 
-                console.log ('Jarak lokasi adalah', distance)
+                console.log('Jarak lokasi adalah', distance)
                 const distanceInKm = distance / 1000; // Convert to kilometers
                 const shippingCost = distanceInKm * 1000; // Adjust the cost calculation as per your requirement
 
@@ -320,7 +320,7 @@ class cartController {
             return 0;
         }
     }
-    
+
 }
 
 module.exports = cartController;
