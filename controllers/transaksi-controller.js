@@ -1,13 +1,21 @@
+
+//express: Framework web untuk Node.js.
 const { response } = require('express');
+//Product, cart, Transaksi: Model skema Mongoose untuk produk, keranjang belanja, dan transaksi
 const Product = require('../models/product-schema');
 const cart = require('../models/cart-schema')
 const Transaksi = require('../models/transaksi-schema');
+//axios: Library untuk melakukan HTTP requests.
 const axios = require('axios');
+//midtrans-client: Library untuk berintegrasi dengan layanan pembayaran Midtrans.
 const midtransClient = require('midtrans-client');
+//multer: Middleware untuk menangani upload file.
 const multer = require('multer');
+//path, fs: Modul untuk menangani path dan sistem file.
 const path = require('path');
 const fs = require('fs');
 const geolib = require('geolib');
+//admin: Modul untuk mengirim notifikasi menggunakan Firebase Cloud Messaging.
 const admin = require('../chat/firebase');
 
 // Konfigurasi multer untuk penyimpanan file
@@ -20,6 +28,8 @@ const storage = multer.diskStorage({
     }
 });
 
+//Menyimpan file yang diupload di direktori uploads/.
+//Menentukan ukuran maksimum file (5MB) dan jenis file yang diperbolehkan (jpeg, jpg, png).
 const upload = multer({
     storage: storage,
     limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
@@ -136,16 +146,21 @@ class TransaksiController {
     //     await TransaksiController.createMidtransTransaction(res, populatedTransaksi);
     // }
 
-    async createTransaksi(req, res) {
-        const user = req.user.id;
-        const userCart = await cart.findOne({ userID: user }).populate('products.productID');
     
+    async createTransaksi(req, res) {
+        //Mengambil ID pengguna dari req.user.id.
+        const user = req.user.id;
+        //Mengambil data keranjang belanja pengguna dari database dan memuat detail produk dengan populate.
+        const userCart = await cart.findOne({ userID: user }).populate('products.productID');
+
+        //Mengecek apakah keranjang belanja kosong.
         if (!userCart || userCart.products.length === 0) {
             return res.status(400).json({
                 message: 'Keranjang kosong atau tidak ditemukan'
             });
         }
-    
+
+        //Membuat objek transaksi baru dengan kode transaksi, detail produk, total harga, tujuan pengiriman, dan biaya pengiriman.
         const newTransaksi = new Transaksi({
             kode_transaksi: 'TRX-' + Date.now() + Math.floor(Math.random() * 1000),
             user: user,
@@ -160,11 +175,13 @@ class TransaksiController {
             } : undefined,
             shippingCost: userCart.shippingCost || 0
         });
-    
+
+        //Menyimpan transaksi baru ke database.
         await newTransaksi.save();
     
-        // Populate Products field in the newly created Transaksi
+        //Memuat kembali transaksi yang baru dibuat dengan detail produk.
         const populatedTransaksi = await Transaksi.findById(newTransaksi._id).populate('Products.ProductID');
+        //Membuat transaksi Midtrans dengan memanggil createMidtransTransaction.
     
         await TransaksiController.createMidtransTransaction(res, populatedTransaksi);
         
@@ -240,17 +257,27 @@ class TransaksiController {
     //     }
     // }
 
-
+    //res: Objek respons dari Express.js untuk mengirimkan respons HTTP.
+    //transaksiData: Data transaksi yang berisi informasi produk dan detail transaksi lainnya.
     static async createMidtransTransaction(res, transaksiData) {
         try {
+            //midtransBaseUrl: URL untuk API Midtrans di lingkungan sandbox (pengujian).
+            //midtransServerKey: Kunci server Midtrans yang digunakan untuk otentikasi.
             const midtransBaseUrl = 'https://app.sandbox.midtrans.com/snap/v1/transactions';
             const midtransServerKey = 'SB-Mid-server-eDKCIhRGlkITnvMDtUpkinKE';
+            //snap: Objek klien Midtrans Snap yang diinisialisasi dengan kunci server dan pengaturan mode pengujian (bukan produksi)
     
             let snap = new midtransClient.Snap({
                 isProduction: false,
                 serverKey: midtransServerKey
             });
-    
+
+            //items: Daftar produk dalam transaksi, diambil dari transaksiData.Products. Setiap produk mencakup:
+            //id: ID produk.
+            //price: Harga produk.
+            //quantity: Kuantitas produk.
+            //name: Nama produk.
+            
             const items = transaksiData.Products.map(product => ({
                 id: product.ProductID._id,
                 price: product.ProductID.price,
@@ -259,6 +286,7 @@ class TransaksiController {
             }));
     
             // Hanya tambahkan detail biaya pengiriman jika ada
+            //shippingCost: Jika biaya pengiriman ada, tambahkan sebagai item ke daftar items.
             if (transaksiData.shippingCost) {
                 items.push({
                     id: 'shipping_cost',
@@ -267,18 +295,27 @@ class TransaksiController {
                     name: 'Shipping Cost'
                 });
             }
-    
+            //total: Menghitung jumlah total harga semua item dalam transaksi
             const total = items.reduce((total, item) => total + (item.price * item.quantity), 0);
+
+            //transactionDetails: Objek yang berisi ID pesanan (order_id) dan jumlah total (gross_amount).
     
             const transactionDetails = {
                 order_id: transaksiData.kode_transaksi.toString(),
                 gross_amount: total
             };
+
+            //Membuat Body Permintaan
+            //requestBody: Objek yang dikirim ke Midtrans berisi detail transaksi dan detail item.
     
             const requestBody = {
                 transaction_details: transactionDetails,
                 item_details: items,
             };
+
+            //snap.createTransaction(requestBody): Membuat transaksi menggunakan Midtrans dengan mengirimkan requestBody. 
+            //then: Jika transaksi berhasil dibuat, kirimkan respons dengan status 201 (Created) beserta detail transaksi.
+            //catch: Jika terjadi kesalahan, lempar kesalahan tersebut untuk ditangani oleh blok catch di luar.
     
             snap.createTransaction(requestBody)
                 .then((transaction) => {
@@ -288,9 +325,11 @@ class TransaksiController {
                         midtransResponse: transaction
                     });
                 })
+                //catch: Menangkap dan melempar kesalahan yang terjadi selama proses pembuatan transaksi.
                 .catch((error) => {
                     throw error;
                 });
+                //catch: Menangkap dan melempar kesalahan yang terjadi selama proses pembuatan transaksi.
         } catch (error) {
             throw error;
         }
