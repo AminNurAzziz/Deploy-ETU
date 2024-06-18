@@ -208,7 +208,7 @@ class TransaksiController {
     // static async createMidtransTransaction(res, transaksiData) {
     //     try {
     //         const midtransBaseUrl = 'https://app.sandbox.midtrans.com/snap/v1/transactions';
-    //         const midtransServerKey = 'SB-Mid-server-eDKCIhRGlkITnvMDtUpkinKE';
+    //         const midtransServerKey = 'Mid-server-OEkBKipwOcYl5id01Yh-kdKA';
 
     //         let snap = new midtransClient.Snap({
     //             isProduction: false,
@@ -264,11 +264,11 @@ class TransaksiController {
             //midtransBaseUrl: URL untuk API Midtrans di lingkungan sandbox (pengujian).
             //midtransServerKey: Kunci server Midtrans yang digunakan untuk otentikasi.
             const midtransBaseUrl = 'https://app.sandbox.midtrans.com/snap/v1/transactions';
-            const midtransServerKey = 'SB-Mid-server-eDKCIhRGlkITnvMDtUpkinKE';
+            const midtransServerKey = 'Mid-server-OEkBKipwOcYl5id01Yh-kdKA';
             //snap: Objek klien Midtrans Snap yang diinisialisasi dengan kunci server dan pengaturan mode pengujian (bukan produksi)
 
             let snap = new midtransClient.Snap({
-                isProduction: false,
+                isProduction: true,
                 serverKey: midtransServerKey
             });
 
@@ -343,7 +343,7 @@ class TransaksiController {
     // static async createMidtransTransaction(res, transaksiData) {
     //     try {
     //         const midtransBaseUrl = 'https://app.sandbox.midtrans.com/snap/v1/transactions';
-    //         const midtransServerKey = 'SB-Mid-server-eDKCIhRGlkITnvMDtUpkinKE';
+    //         const midtransServerKey = 'Mid-server-OEkBKipwOcYl5id01Yh-kdKA';
 
     //         // Create Snap API instance
     //         let snap = new midtransClient.Snap({
